@@ -1,0 +1,57 @@
+package eventbus
+
+type Event interface {
+	EventName() string
+}
+
+type EventHandler func(e Event)
+
+type Subscription struct {
+	Topic string
+	ID    uint64
+}
+
+type Subscriber interface {
+	Subscribe(topic string, handler EventHandler) Subscription
+	Unsubscribe(info *Subscription)
+}
+
+type Publisher interface {
+	Publish(event Event)
+	PublishAsync(event Event)
+}
+
+type Bus interface {
+	Subscriber
+	Publisher
+	CommandSubscriber
+	CommandPublisher
+}
+
+var busSubscriber Subscriber
+var busPublisher Publisher
+
+func Register(bus Bus) {
+	busSubscriber = bus
+	busPublisher = bus
+	busCommandSubscriber = bus
+	busCommandPublisher = bus
+}
+
+func Subscribe(topic string, cb EventHandler) {
+	if busSubscriber != nil {
+		busSubscriber.Subscribe(topic, cb)
+	}
+}
+
+func Publish(event Event) {
+	if busPublisher != nil {
+		busPublisher.Publish(event)
+	}
+}
+
+func PublishAsync(event Event) {
+	if busPublisher != nil {
+		busPublisher.PublishAsync(event)
+	}
+}
