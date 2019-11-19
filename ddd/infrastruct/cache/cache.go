@@ -6,15 +6,15 @@ import (
 	"time"
 )
 
-type SetStringFunction func() (data string, expiration time.Duration)
-type SetObjectFunction func() (data interface{}, expiration time.Duration)
+type SetStringFunction func() (data string, expiration time.Duration, err error)
+type SetObjectFunction func() (data interface{}, expiration time.Duration, err error)
 
 type Cache interface {
 	GetString(key string) (string, error)
 	GetJsonObject(key string, data interface{}) error
 	Set(key string, data interface{}, expiration time.Duration) error
-	GetSetString(key string, setFunc func() (data string, expiration time.Duration)) (string, error)
-	GetSetJsonObject(key string, data interface{}, setFunc func() (data interface{}, expiration time.Duration)) (interface{}, error)
+	GetSetString(key string, setFunc func() (data string, expiration time.Duration, err error)) (string, error)
+	GetSetJsonObject(key string, data interface{}, setFunc func() (data interface{}, expiration time.Duration, err error)) (interface{}, error)
 }
 
 var provider Cache

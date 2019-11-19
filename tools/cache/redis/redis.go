@@ -73,11 +73,15 @@ func (r *RedisCacheProvider) Set(key string, data interface{}, expiration time.D
 	return nil
 }
 
-func (r *RedisCacheProvider) GetSetString(key string, setFunc func() (data string, expiration time.Duration)) (string, error) {
+func (r *RedisCacheProvider) GetSetString(key string, setFunc func() (data string, expiration time.Duration, err error)) (string, error) {
 	val, err := r.GetString(key)
 	if err == redis.Nil {
 		log.Printf("Not Exists Key [%s] Then Setting", key)
-		v, exp := setFunc()
+		v, exp, err := setFunc()
+		if err != nil {
+			log.Printf("Call SetFunc Fail , %s", key, err.Error())
+			return "", err
+		}
 		err = r.Set(key, v, exp)
 		if err != nil {
 			log.Printf("Set Key [%s] Fail , %s", key, err.Error())
@@ -90,11 +94,15 @@ func (r *RedisCacheProvider) GetSetString(key string, setFunc func() (data strin
 	return val, nil
 }
 
-func (r *RedisCacheProvider) GetSetJsonObject(key string, data interface{}, setFunc func() (data interface{}, expiration time.Duration)) (interface{}, error) {
+func (r *RedisCacheProvider) GetSetJsonObject(key string, data interface{}, setFunc func() (data interface{}, expiration time.Duration, err error)) (interface{}, error) {
 	err := r.GetJsonObject(key, data)
 	if err == redis.Nil {
 		log.Printf("Not Exists Key [%s] Then Setting", key)
-		v, exp := setFunc()
+		v, exp, err := setFunc()
+		if err != nil {
+			log.Printf("Call SetFunc Fail , %s", key, err.Error())
+			return nil, err
+		}
 		err = r.Set(key, v, exp)
 		if err != nil {
 			log.Printf("Set Key [%s] Fail , %s", key, err.Error())
