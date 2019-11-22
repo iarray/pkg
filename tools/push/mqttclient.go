@@ -22,7 +22,7 @@ type MqttClient struct {
 
 func NewClient(url string, user string, pwd string) *MqttClient {
 	//设置连接参数, 断线自动重连, 初次连接直到成功
-	clinetOptions := mqtt.NewClientOptions().AddBroker(url).SetUsername(user).SetPassword(pwd).SetAutoReconnect(true).SetConnectRetry(true)
+	clinetOptions := mqtt.NewClientOptions().AddBroker(url).SetUsername(user).SetPassword(pwd).SetAutoReconnect(true) //.SetConnectRetry(true)
 	//设置客户端ID
 	clinetOptions.SetClientID(fmt.Sprintf("app-api：%d", time.Now().Unix()))
 	//设置handler
