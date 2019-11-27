@@ -4,6 +4,10 @@ type Event interface {
 	EventName() string
 }
 
+type EventStore interface {
+	Save(e Event)
+}
+
 type EventHandler func(e Event)
 
 type Subscription struct {
@@ -30,12 +34,17 @@ type Bus interface {
 
 var busSubscriber Subscriber
 var busPublisher Publisher
+var store EventStore
 
 func Register(bus Bus) {
 	busSubscriber = bus
 	busPublisher = bus
 	busCommandSubscriber = bus
 	busCommandPublisher = bus
+}
+
+func RegisterStore(s EventStore) {
+	store = s
 }
 
 func Subscribe(topic string, cb EventHandler) {
@@ -47,11 +56,17 @@ func Subscribe(topic string, cb EventHandler) {
 func Publish(event Event) {
 	if busPublisher != nil {
 		busPublisher.Publish(event)
+		if store != nil {
+			store.Save(event)
+		}
 	}
 }
 
 func PublishAsync(event Event) {
 	if busPublisher != nil {
 		busPublisher.PublishAsync(event)
+		if store != nil {
+			store.Save(event)
+		}
 	}
 }
