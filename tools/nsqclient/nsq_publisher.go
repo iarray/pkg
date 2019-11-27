@@ -2,7 +2,6 @@ package nsqclient
 
 import (
 	"encoding/json"
-	"errors"
 	"sync"
 
 	"github.com/iarray/pkg/ddd/infrastruct/mqclient"
@@ -12,8 +11,7 @@ import (
 type NsqPublisher struct {
 	LookupHost string
 	producer   *nsq.Producer
-	once       sync.Once
-	err        error
+	lock       sync.Mutex
 }
 
 func NewPublisher(lookuphost string) mqclient.IMqClient {
@@ -21,23 +19,28 @@ func NewPublisher(lookuphost string) mqclient.IMqClient {
 }
 
 func (n *NsqPublisher) Connect() error {
-	n.once.Do(func() {
-		config := nsq.NewConfig()
-		producer, err2 := nsq.NewProducer(n.LookupHost, config)
-		if err2 != nil {
-			n.err = err2
-		}
-		n.producer = producer
-	})
-	return n.err
+	n.lock.Lock()
+	defer n.lock.Unlock()
+	if n.producer != nil {
+		n.producer.Stop()
+	}
+	config := nsq.NewConfig()
+	producer, err := nsq.NewProducer(n.LookupHost, config)
+	if err != nil {
+		return err
+	}
+	n.producer = producer
+	return nil
 }
 
 func (n *NsqPublisher) Publish(topic string, data interface{}, qos int, retain bool) error {
 	if n.producer == nil {
-		return errors.New("Publisher not connect")
+		n.Connect()
 	}
 	buf, err := json.Marshal(data)
 	if err != nil {
+		//重连
+		n.Connect()
 		return err
 	}
 	messageBody := buf
