@@ -2,6 +2,7 @@ package nsqclient
 
 import (
 	"encoding/json"
+	"log"
 	"sync"
 
 	"github.com/iarray/pkg/ddd/infrastruct/mqclient"
@@ -39,20 +40,21 @@ func (n *NsqPublisher) Publish(topic string, data interface{}, qos int, retain b
 	}
 	buf, err := json.Marshal(data)
 	if err != nil {
-		//重连
-		n.Connect()
+		log.Println("===== NSQ Json Marshal Fail ====")
 		return err
 	}
 	messageBody := buf
 	topicName := topic
 
-	// Synchronously publish a single message to the specified topic.
-	// Messages can also be sent asynchronously and/or in batches.
 	err = n.producer.Publish(topicName, messageBody)
 	if err != nil {
+		//重连
+		n.Connect()
+		log.Println("===== NSQ Publish Fail , Reconnect ======")
 		return err
 	}
 
+	log.Println("===== NSQ Publish Success ======")
 	return nil
 	//producer.Stop()
 }
