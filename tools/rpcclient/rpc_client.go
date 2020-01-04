@@ -1,6 +1,8 @@
 package rpcclient
 
 import (
+	"errors"
+	"log"
 	"net/rpc"
 	"sync"
 )
@@ -19,17 +21,25 @@ func SetRemoteAddress(netword, addr string) {
 	}
 }
 
-func Connect() {
+func Connect() error {
 	if client == nil {
 		lock.Lock()
 		defer lock.Unlock()
 		if client == nil {
-			client, _ = rpc.Dial(nw, remoteAddr)
+			var err error
+			if client, err = rpc.Dial(nw, remoteAddr); err != nil {
+				log.Println(err)
+				return err
+			}
 		}
 	}
+	return nil
 }
 
 func Run(method string, args interface{}, result interface{}) error {
 	Connect()
+	if client == nil {
+		return errors.New("rpc客户端未连接")
+	}
 	return client.Call(method, args, result)
 }
