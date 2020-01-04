@@ -9,7 +9,7 @@ var client *rpc.Client
 var nw, remoteAddr string
 var lock sync.Mutex
 
-func setRemoteAddress(netword, addr string) {
+func SetRemoteAddress(netword, addr string) {
 	lock.Lock()
 	defer lock.Unlock()
 	remoteAddr = addr
@@ -19,7 +19,7 @@ func setRemoteAddress(netword, addr string) {
 	}
 }
 
-func connect() {
+func Connect() {
 	if client == nil {
 		lock.Lock()
 		defer lock.Unlock()
@@ -29,7 +29,7 @@ func connect() {
 	}
 }
 
-func run(method string, args interface{}, result interface{}) error {
-	connect()
+func Run(method string, args interface{}, result interface{}) error {
+	Connect()
 	return client.Call(method, args, result)
 }
