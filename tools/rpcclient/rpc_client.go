@@ -1,4 +1,4 @@
-package server
+package rpcclient
 
 import (
 	"net/rpc"
