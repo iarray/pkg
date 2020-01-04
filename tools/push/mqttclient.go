@@ -12,6 +12,18 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
+type Message interface {
+	Duplicate() bool
+	Qos() byte
+	Retained() bool
+	Topic() string
+	MessageID() uint16
+	Payload() []byte
+	Ack()
+}
+
+type MessageHandler func(msg Message)
+
 type MqttClient struct {
 	//Recieve chan []byte
 	Send chan []byte
@@ -67,6 +79,22 @@ func (c *MqttClient) Connect() {
 		return
 	}
 
+}
+
+func (c *MqttClient) Subscribe(topic string, qos byte, callback MessageHandler) error {
+	if c.client == nil || !c.client.IsConnected() {
+		return errors.New("mqtt client disconnect")
+	}
+	c.Lock()
+	defer c.Unlock()
+	if token := c.client.Subscribe(topic, qos, func(cli mqtt.Client, msg mqtt.Message) {
+		if callback != nil {
+			callback(msg)
+		}
+	}); token.WaitTimeout(time.Duration(60)*time.Second) && token.Wait() && token.Error() != nil {
+		return token.Error()
+	}
+	return nil
 }
 
 func messagePubHandler(client mqtt.Client, msg mqtt.Message) {
