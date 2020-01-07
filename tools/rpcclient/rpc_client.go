@@ -41,7 +41,7 @@ func Close() {
 	defer lock.Unlock()
 	if client != nil {
 		client.Close()
-		client = null
+		client = nil
 	}
 }
 
