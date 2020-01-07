@@ -36,10 +36,25 @@ func Connect() error {
 	return nil
 }
 
+func Close() {
+	lock.Lock()
+	defer lock.Unlock()
+	if client != nil {
+		client.Close()
+		client = null
+	}
+}
+
 func Run(method string, args interface{}, result interface{}) error {
 	Connect()
 	if client == nil {
 		return errors.New("rpc客户端未连接")
 	}
-	return client.Call(method, args, result)
+	if err := client.Call(method, args, result); err != nil && err == rpc.ErrShutdown {
+		//重连
+		Close()
+		Connect()
+		return err
+	}
+	return nil
 }
