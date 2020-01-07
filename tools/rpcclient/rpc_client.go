@@ -50,10 +50,12 @@ func Run(method string, args interface{}, result interface{}) error {
 	if client == nil {
 		return errors.New("rpc客户端未连接")
 	}
-	if err := client.Call(method, args, result); err != nil && err == rpc.ErrShutdown {
-		//重连
-		Close()
-		Connect()
+	if err := client.Call(method, args, result); err != nil {
+		if err == rpc.ErrShutdown {
+			//重连
+			Close()
+			Connect()
+		}
 		return err
 	}
 	return nil
