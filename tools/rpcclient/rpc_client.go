@@ -55,8 +55,10 @@ func Run(method string, args interface{}, result interface{}) error {
 			//重连
 			Close()
 			Connect()
+			return errors.New("断开连接请重试")
+		} else {
+			return err
 		}
-		return err
 	}
 	return nil
 }
